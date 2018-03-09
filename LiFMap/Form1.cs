@@ -103,17 +103,14 @@ namespace LiFMap
 
         private void ZoomScroll(Graphics g, Point location, bool zoomIn)
         {
-            // make zoom-point (cursor location) our origin
             g.ResetTransform();
             g.TranslateTransform(-location.X, -location.Y);
 
-            // perform zoom (at origin)
             if (zoomIn)
                 g.ScaleTransform(s_dScrollValue, s_dScrollValue, MatrixOrder.Append);
             else
                 g.ScaleTransform(1 / s_dScrollValue, 1 / s_dScrollValue);
 
-            // translate origin back to cursor
             g.TranslateTransform(location.X, location.Y, MatrixOrder.Append);
 
             //pictureBox1.Invalidate();

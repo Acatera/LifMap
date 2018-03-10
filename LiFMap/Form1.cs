@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -241,10 +242,17 @@ namespace LiFMap
             else
                 basepath = @"D:\LifLayers\data";
             var files = Directory.GetFiles(basepath, "*.ter").OrderBy(f => f).Where(f => f.EndsWith("ter"));
+
+            var tasks = new List<Task>();
             foreach (var file in files)
             {
-                terrain.Add(new Terrain().LoadData(file));
+                tasks.Add(Task.Factory.StartNew(() =>
+                {
+                    terrain.Add(new Terrain().LoadData(file));
+                }));
             }
+
+            Task.WaitAll(tasks.ToArray());
         }
 
         private List<Terrain> terrain;
@@ -281,33 +289,49 @@ namespace LiFMap
 
         private void button2_Click(object sender, EventArgs e)
         {
+            var watch = new Stopwatch();
+            watch.Start();
             if (terrain == null)
             {
                 LoadData();
             }
+            lbOutput.Items.Add($"Loading terrrain = {watch.ElapsedMilliseconds}");
 
+            watch.Restart();
             zoomFactor = 1;
             var renderer = new TerrainRenderer();
-            var images = new List<Bitmap>();
+            var images = new Dictionary<Tuple<int, int>, Bitmap>();
+            var tasks = new List<Task>();
+
+
             foreach (var chunk in terrain)
             {
-                images.Add(renderer.RenderLayer(chunk, int.Parse(textBox1.Text), int.Parse(textBox2.Text)));
+                tasks.Add(Task.Factory.StartNew(() =>
+                {
+                    images.Add(new Tuple<int, int>(chunk.X, chunk.Y), 
+                        renderer.RenderLayer(chunk, int.Parse(textBox1.Text), int.Parse(textBox2.Text)));
+                }));
             }
+            Task.WaitAll(tasks.ToArray());
 
-            var chunkSize = images[0].Width; //or height. They are square;
+            //var chunkSize = images.[0].Width; //or height. They are square;
+            var chunkSize = 511;//hardcoded for now;
             renderedImage = new Bitmap(chunkSize * 3, chunkSize * 3);
             var graphics = Graphics.FromImage(renderedImage);
             for (int x = 0; x < 3; x++)
             {
                 for (int y = 0; y < 3; y++)
                 {
-                    graphics.DrawImage(images[y * 3 + x], new Point(x * chunkSize, (3 - y - 1) * chunkSize));
+                    var tuple = new Tuple<int, int>(x, y);
+                    if (images.ContainsKey(tuple))
+                        graphics.DrawImage(images[tuple], new Point(x * chunkSize, y * chunkSize));
                 }
             }
 
             pictureBox1.Image = renderedImage;
+            lbOutput.Items.Add($"Rendering terrrain = {watch.ElapsedMilliseconds}");
 
-            label1.Text = $"Elevation: {int.Parse(textBox1.Text)}";
+            //label1.Text = $"Elevation: {int.Parse(textBox1.Text)}";
         }
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)

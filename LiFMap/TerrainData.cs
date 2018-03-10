@@ -9,11 +9,12 @@ namespace LiFMap
 {
     public class TerrainColumn
     {
-        public IList<TerrainCell> Cells { get; private set; }
+        //public IList<TerrainCell> Cells { get; private set; }
+        public TerrainCell[] Cells { get; private set; }
 
-        public TerrainColumn()
+        public TerrainColumn(int depth)
         {
-            Cells = new List<TerrainCell>();
+            Cells = new TerrainCell[depth];
         }
 
         public TerrainCell GetTopCell()
@@ -30,22 +31,35 @@ namespace LiFMap
         }
     }
 
-    public class TerrainCell
+    public struct TerrainCell
     {
         public int MaterialId { get; set; }
         public int Elevation { get; set; }
         public int Flags { get; set; }
         public bool IsTopMost { get; set; }
-        public short Quality { get; internal set; }
+        public int Quality { get; internal set; }
     }
 
     public class Terrain
     {
         public int Size { get; private set; }
-        public List<int[][]> Data { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+
+        public Terrain()
+        {
+
+        }
+
+        public Terrain(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
 
         private List<int[]> indexData;
-        private List<TerrainColumn> data;
+        //private List<TerrainColumn> data;
+        private TerrainColumn[] data;
 
         public Terrain LoadData(string path)
         {
@@ -60,35 +74,53 @@ namespace LiFMap
 
         private void LoadTerrainData(string datPath)
         {
-            Data = new List<int[][]>();
-            data = new List<TerrainColumn>();
+            //data = new List<TerrainColumn>();
+            data = new TerrainColumn[indexData.Count];
             using (var stream = new FileStream(datPath, FileMode.Open, FileAccess.Read))
             {
                 using (var reader = new BinaryReader(stream))
                 {
+                    var buffer = new byte[stream.Length];
+                    reader.Read(buffer, 0, buffer.Length);
+                    var offset = 0;
                     for (int i = 0; i < indexData.Count; i++)
                     {
                         var depth = indexData[i][1];
-                        //var point = new int[depth][];
-                        var column = new TerrainColumn();
+
+                        //var buffer = new byte[depth * 8];
+                        var column = new TerrainColumn(depth);
                         for (int d = 0; d < depth; d++)
                         {
                             var cell = new TerrainCell
                             {
-                                Elevation = reader.ReadInt16(),
-                                MaterialId = reader.ReadInt16(),
-                                Flags = reader.ReadInt16(),
-                                Quality = reader.ReadInt16(),
+                                Elevation = buffer[(offset) + 1] << 8 | buffer[(offset) + 0],
+                                MaterialId = buffer[(offset) + 3] << 8 | buffer[(offset) + 2],
+                                Flags = buffer[(offset) + 5] << 8 | buffer[(offset) + 4],
+                                Quality = buffer[(offset) + 7] << 8 | buffer[(offset) + 6],
                                 IsTopMost = d == 0
                             };
-                            //var pe = new int[3];
-                            //pe[0] = reader.ReadInt16();
-                            //pe[1] = reader.ReadInt16();
-                            //pe[2] = reader.ReadInt32();
-                            //point[d] = pe;
-                            column.Cells.Add(cell);
+                            offset += 8;
+                            //var cell = new TerrainCell
+                            //{
+                            //    Elevation = buffer[(d * 8) + 1] << 8 | buffer[(d * 8) + 0],
+                            //    MaterialId = buffer[(d * 8) + 3] << 8 | buffer[(d * 8) + 2],
+                            //    Flags = buffer[(d * 8) + 5] << 8 | buffer[(d * 8) + 4],
+                            //    Quality = buffer[(d * 8) + 7] << 8 | buffer[(d * 8) + 6],
+                            //    IsTopMost = d == 0
+                            //};
+                            //var cell = new TerrainCell
+                            //{
+                            //    Elevation = reader.ReadInt16(),
+                            //    MaterialId = reader.ReadInt16(),
+                            //    Flags = reader.ReadInt16(),
+                            //    Quality = reader.ReadInt16(),
+                            //    IsTopMost = d == 0
+                            //};
+                            //column.Cells.Add(cell);
+                            column.Cells[d] = cell;
                         }
-                        data.Add(column);
+                        //data.Add(column);
+                        data[i] = column;
                         //Data.Add(point);
                     }
                 }
@@ -106,7 +138,12 @@ namespace LiFMap
                     Size = reader.ReadInt16();
                     var size = Size * Size;
 
-                    stream.Position += 6;
+                    stream.Position += 2;
+
+                    var terrainId = reader.ReadInt32();
+                    X = (terrainId - 442) % 3;
+                    Y = 3 - (terrainId - 442) / 3 - 1;
+
                     for (int i = 0; i < size; i++)
                     {
                         var point = new int[2];

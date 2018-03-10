@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 namespace LiFMap
 {
@@ -49,6 +51,11 @@ namespace LiFMap
                 { 23, Color.FromArgb(218, 138, 103) } //Copper
             };
 
+            var imageRect = new Rectangle(0, 0, image.Width, image.Height);
+            var bitmapData = image.LockBits(imageRect, ImageLockMode.WriteOnly, image.PixelFormat);
+            var ptrData = bitmapData.Scan0;
+
+            var pixels = new byte[terrain.Size * terrain.Size * 4];
             for (int x = 0; x < terrain.Size; x++)
             {
                 for (int y = 0; y < terrain.Size; y++)
@@ -69,8 +76,6 @@ namespace LiFMap
                                 color = colorMap[cell.MaterialId];
                                 color = ApplyElevation(color, elevation, 7000);
                             }
-                            //var intensity = (int)MapValue(0, 7000, 0, 255, cell.Elevation);
-                            //color = Color.FromArgb(intensity, intensity, intensity);
                         }
                     }
                     else
@@ -80,10 +85,16 @@ namespace LiFMap
                             color = veinMap[cell.MaterialId];
                         }
                     }
-                    image.SetPixel(x, terrain.Size - y - 1, color);
+                    //image.SetPixel(x, terrain.Size - y - 1, color);
+                    var offset = ((terrain.Size - y - 1) * terrain.Size + x) * 4;
+                    pixels[offset] = color.B;
+                    pixels[offset + 1] = color.G;
+                    pixels[offset + 2] = color.R;
+                    pixels[offset + 3] = color.A;
                 }
             }
-
+            Marshal.Copy(pixels, 0, ptrData, pixels.Length);
+            image.UnlockBits(bitmapData);
             return image;
         }
 

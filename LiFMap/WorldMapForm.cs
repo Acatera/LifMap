@@ -122,6 +122,42 @@ namespace LiFMap
             return data;
         }
 
+        private void PictureBox1_MouseWheel(object sender, MouseEventArgs e)
+        {
+            ((HandledMouseEventArgs)e).Handled = true;
+            if ((ModifierKeys & Keys.Control) != 0)
+            {
+                if (e.Delta > 0)
+                {
+                    if (zoomFactor > 8)
+                        return;
+                    zoomFactor *= 2;
+                    pictureBox1.Width *= 2;
+                    pictureBox1.Height *= 2;
+                }
+                else
+                {
+                    if (zoomFactor == 1)
+                        return;
+                    zoomFactor /= 2;
+                    pictureBox1.Width /= 2;
+                    pictureBox1.Height /= 2;
+                }
+            }
+            else if ((ModifierKeys & Keys.Shift) != 0)
+            {
+                var newHorizontalPos = Math.Max(0, panel2.HorizontalScroll.Value - e.Delta);
+                newHorizontalPos = Math.Min(panel2.HorizontalScroll.Maximum, newHorizontalPos);
+                panel2.HorizontalScroll.Value = newHorizontalPos;
+            }
+            else
+            {
+                var newVerticalPos = Math.Max(0, panel2.VerticalScroll.Value - e.Delta);
+                newVerticalPos = Math.Min(panel2.VerticalScroll.Maximum, newVerticalPos);
+                panel2.VerticalScroll.Value = newVerticalPos;
+            }
+        }
+
         private void LoadData()
         {
             terrain = new List<Terrain>();

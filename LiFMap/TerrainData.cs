@@ -9,7 +9,6 @@ namespace LiFMap
 {
     public class TerrainColumn
     {
-        //public IList<TerrainCell> Cells { get; private set; }
         public TerrainCell[] Cells { get; private set; }
 
         public TerrainColumn(int depth)

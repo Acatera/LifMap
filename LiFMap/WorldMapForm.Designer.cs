@@ -30,6 +30,12 @@
         {
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.gbSearch = new System.Windows.Forms.GroupBox();
+            this.txtMinQuality = new System.Windows.Forms.TextBox();
+            this.lblMinQuality = new System.Windows.Forms.Label();
+            this.btnSearch = new System.Windows.Forms.Button();
+            this.cbSubstances = new System.Windows.Forms.ComboBox();
+            this.lblMaterialId = new System.Windows.Forms.Label();
             this.cbFollowPlayer = new System.Windows.Forms.CheckBox();
             this.btnCenterPlayer = new System.Windows.Forms.Button();
             this.lbOutput = new System.Windows.Forms.ListBox();
@@ -43,16 +49,10 @@
             this.label1 = new System.Windows.Forms.Label();
             this.btnRenderWorld = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.gbSearch = new System.Windows.Forms.GroupBox();
-            this.lblMaterialId = new System.Windows.Forms.Label();
-            this.btnSearch = new System.Windows.Forms.Button();
-            this.lblMinQuality = new System.Windows.Forms.Label();
-            this.txtMinQuality = new System.Windows.Forms.TextBox();
-            this.cbSubstances = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
-            this.panel2.SuspendLayout();
             this.gbSearch.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // pictureBox1
@@ -65,7 +65,6 @@
             this.pictureBox1.TabStop = false;
             this.pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox1_Paint);
             this.pictureBox1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseClick);
-            this.pictureBox1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseDown);
             this.pictureBox1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseMove);
             // 
             // panel1
@@ -89,6 +88,70 @@
             this.panel1.Padding = new System.Windows.Forms.Padding(4);
             this.panel1.Size = new System.Drawing.Size(207, 526);
             this.panel1.TabIndex = 2;
+            // 
+            // gbSearch
+            // 
+            this.gbSearch.Controls.Add(this.txtMinQuality);
+            this.gbSearch.Controls.Add(this.lblMinQuality);
+            this.gbSearch.Controls.Add(this.btnSearch);
+            this.gbSearch.Controls.Add(this.cbSubstances);
+            this.gbSearch.Controls.Add(this.lblMaterialId);
+            this.gbSearch.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.gbSearch.Location = new System.Drawing.Point(4, 163);
+            this.gbSearch.Name = "gbSearch";
+            this.gbSearch.Size = new System.Drawing.Size(199, 121);
+            this.gbSearch.TabIndex = 17;
+            this.gbSearch.TabStop = false;
+            this.gbSearch.Text = "Search:";
+            // 
+            // txtMinQuality
+            // 
+            this.txtMinQuality.Dock = System.Windows.Forms.DockStyle.Top;
+            this.txtMinQuality.Location = new System.Drawing.Point(3, 63);
+            this.txtMinQuality.Name = "txtMinQuality";
+            this.txtMinQuality.Size = new System.Drawing.Size(193, 20);
+            this.txtMinQuality.TabIndex = 4;
+            this.txtMinQuality.Text = "80";
+            // 
+            // lblMinQuality
+            // 
+            this.lblMinQuality.AutoSize = true;
+            this.lblMinQuality.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblMinQuality.Location = new System.Drawing.Point(3, 50);
+            this.lblMinQuality.Name = "lblMinQuality";
+            this.lblMinQuality.Size = new System.Drawing.Size(63, 13);
+            this.lblMinQuality.TabIndex = 3;
+            this.lblMinQuality.Text = "Min. quality:";
+            // 
+            // btnSearch
+            // 
+            this.btnSearch.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.btnSearch.Location = new System.Drawing.Point(3, 95);
+            this.btnSearch.Name = "btnSearch";
+            this.btnSearch.Size = new System.Drawing.Size(193, 23);
+            this.btnSearch.TabIndex = 2;
+            this.btnSearch.Text = "Search";
+            this.btnSearch.UseVisualStyleBackColor = true;
+            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
+            // 
+            // cbSubstances
+            // 
+            this.cbSubstances.Dock = System.Windows.Forms.DockStyle.Top;
+            this.cbSubstances.FormattingEnabled = true;
+            this.cbSubstances.Location = new System.Drawing.Point(3, 29);
+            this.cbSubstances.Name = "cbSubstances";
+            this.cbSubstances.Size = new System.Drawing.Size(193, 21);
+            this.cbSubstances.TabIndex = 5;
+            // 
+            // lblMaterialId
+            // 
+            this.lblMaterialId.AutoSize = true;
+            this.lblMaterialId.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblMaterialId.Location = new System.Drawing.Point(3, 16);
+            this.lblMaterialId.Name = "lblMaterialId";
+            this.lblMaterialId.Size = new System.Drawing.Size(61, 13);
+            this.lblMaterialId.TabIndex = 1;
+            this.lblMaterialId.Text = "Material ID:";
             // 
             // cbFollowPlayer
             // 
@@ -219,71 +282,6 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(562, 526);
             this.panel2.TabIndex = 3;
-            this.panel2.MouseMove += new System.Windows.Forms.MouseEventHandler(this.panel2_MouseMove);
-            // 
-            // gbSearch
-            // 
-            this.gbSearch.Controls.Add(this.txtMinQuality);
-            this.gbSearch.Controls.Add(this.lblMinQuality);
-            this.gbSearch.Controls.Add(this.btnSearch);
-            this.gbSearch.Controls.Add(this.cbSubstances);
-            this.gbSearch.Controls.Add(this.lblMaterialId);
-            this.gbSearch.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.gbSearch.Location = new System.Drawing.Point(4, 163);
-            this.gbSearch.Name = "gbSearch";
-            this.gbSearch.Size = new System.Drawing.Size(199, 121);
-            this.gbSearch.TabIndex = 17;
-            this.gbSearch.TabStop = false;
-            this.gbSearch.Text = "Search:";
-            // 
-            // lblMaterialId
-            // 
-            this.lblMaterialId.AutoSize = true;
-            this.lblMaterialId.Dock = System.Windows.Forms.DockStyle.Top;
-            this.lblMaterialId.Location = new System.Drawing.Point(3, 16);
-            this.lblMaterialId.Name = "lblMaterialId";
-            this.lblMaterialId.Size = new System.Drawing.Size(61, 13);
-            this.lblMaterialId.TabIndex = 1;
-            this.lblMaterialId.Text = "Material ID:";
-            // 
-            // btnSearch
-            // 
-            this.btnSearch.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.btnSearch.Location = new System.Drawing.Point(3, 95);
-            this.btnSearch.Name = "btnSearch";
-            this.btnSearch.Size = new System.Drawing.Size(193, 23);
-            this.btnSearch.TabIndex = 2;
-            this.btnSearch.Text = "Search";
-            this.btnSearch.UseVisualStyleBackColor = true;
-            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
-            // 
-            // lblMinQuality
-            // 
-            this.lblMinQuality.AutoSize = true;
-            this.lblMinQuality.Dock = System.Windows.Forms.DockStyle.Top;
-            this.lblMinQuality.Location = new System.Drawing.Point(3, 50);
-            this.lblMinQuality.Name = "lblMinQuality";
-            this.lblMinQuality.Size = new System.Drawing.Size(63, 13);
-            this.lblMinQuality.TabIndex = 3;
-            this.lblMinQuality.Text = "Min. quality:";
-            // 
-            // txtMinQuality
-            // 
-            this.txtMinQuality.Dock = System.Windows.Forms.DockStyle.Top;
-            this.txtMinQuality.Location = new System.Drawing.Point(3, 63);
-            this.txtMinQuality.Name = "txtMinQuality";
-            this.txtMinQuality.Size = new System.Drawing.Size(193, 20);
-            this.txtMinQuality.TabIndex = 4;
-            this.txtMinQuality.Text = "80";
-            // 
-            // cbSubstances
-            // 
-            this.cbSubstances.Dock = System.Windows.Forms.DockStyle.Top;
-            this.cbSubstances.FormattingEnabled = true;
-            this.cbSubstances.Location = new System.Drawing.Point(3, 29);
-            this.cbSubstances.Name = "cbSubstances";
-            this.cbSubstances.Size = new System.Drawing.Size(193, 21);
-            this.cbSubstances.TabIndex = 5;
             // 
             // WorldMapForm
             // 
@@ -294,13 +292,12 @@
             this.Controls.Add(this.panel1);
             this.Name = "WorldMapForm";
             this.Text = "Form1";
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.Form1_Paint);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            this.panel2.ResumeLayout(false);
             this.gbSearch.ResumeLayout(false);
             this.gbSearch.PerformLayout();
+            this.panel2.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }

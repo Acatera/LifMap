@@ -30,9 +30,10 @@ namespace LiFMap
     {
         private DataSet data = new DataSet();
         private MySqlConnection connection;
-        private double minZoomFactor;
-        private Point renderOffset = new Point(0, 0);
         private Bitmap renderedImage;
+        private float zoomFactor = 1;
+        private List<Point> extraData = new List<Point>();
+
         public WorldMapForm()
         {
             InitializeComponent();
@@ -65,7 +66,7 @@ namespace LiFMap
             foreach (var substance in substances)
             {
                 cbSubstances.Items.Add(substance);
-                
+
             }
             cbSubstances.Sorted = true;
         }
@@ -75,58 +76,11 @@ namespace LiFMap
             ((HandledMouseEventArgs)e).Handled = true;
         }
 
-        private float zoomFactor = 1;
-        private void PictureBox1_MouseWheel(object sender, MouseEventArgs e)
-        {
-            ((HandledMouseEventArgs)e).Handled = true;
-            if ((ModifierKeys & Keys.Control) != 0)
-            {
-                if (e.Delta > 0)
-                {
-                    if (zoomFactor > 8)
-                        return;
-                    zoomFactor *= 2;
-                    pictureBox1.Width *= 2;
-                    pictureBox1.Height *= 2;
-                }
-                else
-                {
-                    if (zoomFactor == 1)
-                        return;
-                    zoomFactor /= 2;
-                    pictureBox1.Width /= 2;
-                    pictureBox1.Height /= 2;
-                }
-            }
-            else if ((ModifierKeys & Keys.Shift) != 0)
-            {
-                var newHorizontalPos = Math.Max(0, panel2.HorizontalScroll.Value - e.Delta);
-                newHorizontalPos = Math.Min(panel2.HorizontalScroll.Maximum, newHorizontalPos);
-                panel2.HorizontalScroll.Value = newHorizontalPos;
-            }
-            else
-            {
-                var newVerticalPos = Math.Max(0, panel2.VerticalScroll.Value - e.Delta);
-                newVerticalPos = Math.Min(panel2.VerticalScroll.Maximum, newVerticalPos);
-                panel2.VerticalScroll.Value = newVerticalPos;
-            }
-        }
-
-        private void AddOutput(string s)
-        {
-            lbOutput.Items.Add(s);
-        }
-
         private Point MousePosToWorldCoords(Point location)
         {
-            if (zoomFactor > 1)
-                return new Point((int)((location.X) / zoomFactor) + renderOffset.X, (int)((location.Y) / zoomFactor) + renderOffset.Y);
-            else
-                return new Point((int)(location.X / zoomFactor) + renderOffset.X, (int)(location.Y / zoomFactor) + renderOffset.Y);
+            return new Point((int)(location.X / zoomFactor), (int)(location.Y / zoomFactor));
         }
 
-        List<Point> extraData = new List<Point>();
-        #region obsolete
         private void GetData()
         {
             connection = new MySqlConnection("Server=localhost;Database=lif_1;Uid=root;Pwd=LiFroot;");
@@ -144,47 +98,6 @@ namespace LiFMap
             }
 
             connection.Close();
-
-            return;
-            var layers = new List<Image>();
-
-            layers.Add(ExecuteToImage(
-                "select(GeoDataID >> 18) - 442 as terID, (GeoDataID & ((1 << 9) - 1)) as `x`, ((GeoDataID >> 9) & ((1 << (9)) - 1)) as `y` " +
-                "from forest_patch " +
-                "where GeoDataId IS NOT NULL", Color.ForestGreen));
-            layers.Add(ExecuteToImage(
-            "select(f.GeoDataID >> 18) - 442 as terID, (f.GeoDataID & ((1 << 9) - 1)) as `x`, ((f.GeoDataID >> 9) & ((1 << (9)) - 1)) as `y`, f.treetype, f.Quality from forest f inner join forest_patch fp on f.GeoDataID = fp.GeoDataID and f.Quality > 80", Color.Red));
-
-            layers.Add(ExecuteToImage(
-                "select IfNull(GeoDataID, 0)," +
-                    "(GeoDataID >> 18) - 442 as terID, " +
-                    "(GeoDataID & ((1 << 9) - 1)) as `x`, " +
-                    "((GeoDataID >> 9) & ((1 << (9)) - 1)) as `y`, " +
-                    "IFNULL(Substance, 0) Substance " +
-                "from geo_patch gp " +
-                "Where substance < 64", Color.DodgerBlue));
-
-            layers.Add(ExecuteToImage(
-                "select (GeoDataID >> 18) - 442 as terID, (GeoDataID& ((1 << 9) - 1)) as `x`, ((GeoDataID >> 9) & ((1 << (9)) - 1)) as `y` from objects_patch", Color.Gray));
-
-            if (!Directory.Exists(@"D:\LiFLayers"))
-                Directory.CreateDirectory(@"D:\LiFLayers");
-
-            for (int i = 0; i < layers.Count; i++)
-            {
-                layers[i].Save($@"D:\LiFLayers\layer{i}.png", ImageFormat.Png);
-            }
-            //for (int i = 0; i < 16; i++)
-            //{
-
-            //ExecuteCommand("select IfNull(GeoDataID, 0), 	(GeoDataID >> 18) - 442 as terID, (GeoDataID & ((1 << 9) - 1)) as `x`, ((GeoDataID >> 9) & ((1 << (9)) - 1)) as `y`, IFNULL(Substance, 0) Substance from geo_patch gp Where substance < 64", connection);
-
-
-
-            //}
-
-            //ExecuteCommand("select (GeoDataID >> 18) - 442 as terID, (GeoDataID& ((1 << 9) - 1)) as `x`, ((GeoDataID >> 9) & ((1 << (9)) - 1)) as `y` from geo_patch", connection);
-
         }
 
         private Point GeoIdToPoint(DataRow row)
@@ -199,45 +112,6 @@ namespace LiFMap
             return new Point(x, y);
         }
 
-        private Image ExecuteToImage(string command, Color color)
-        {
-            var data = ExecuteToDataTable(command);
-            return GenerateLayer(data, color);
-        }
-
-        private Image GenerateLayer(DataTable data, Color color)
-        {
-            var image = new Bitmap(511 * 3, 511 * 3);
-            foreach (DataRow dataPoint in data.Rows)
-            {
-                int x = int.Parse(dataPoint["x"].ToString()) + (int.Parse(dataPoint["terid"].ToString()) % 3) * 511;
-                int y = 1533 - (int.Parse(dataPoint["y"].ToString()) + (int.Parse(dataPoint["terid"].ToString()) / 3) * 511);
-
-                image.SetPixel(x, y, color);// (brush, x, y, 1, 1);
-            }
-
-            return image;
-        }
-
-        private void Form1_Paint(object sender, PaintEventArgs e)
-        {
-            //return;
-            //if (charPos != null)
-            //{
-            //    var actualX = ((ulong)charPos.Rows[0]["terid"] % 3) * 511 + (ulong)charPos.Rows[0]["x"];
-            //    var actualY = ((ulong)charPos.Rows[0]["terid"] % 3) * 511 + (ulong)charPos.Rows[0]["y"];
-
-            //    var x = (float)(actualX * zoomFactor);
-            //    var y = (float)(actualY * zoomFactor);
-            //    e.Graphics.FillRectangle(Brushes.Red, new RectangleF(x - 1, y - 1, 3, 3));
-            //}
-        }
-
-        public double MapValue(double a0, double a1, double b0, double b1, double a)
-        {
-            return b0 + (b1 - b0) * ((a - a0) / (a1 - a0));
-        }
-
         private DataTable ExecuteToDataTable(string command)
         {
             var cmd = new MySqlCommand(command, connection);
@@ -248,12 +122,6 @@ namespace LiFMap
             return data;
         }
 
-        private void ExecuteCommand(string command)
-        {
-            var data = ExecuteToDataTable(command);
-            this.data.Tables.Add(data);
-        }
-        #endregion
         private void LoadData()
         {
             terrain = new List<Terrain>();
@@ -278,37 +146,6 @@ namespace LiFMap
 
         private List<Terrain> terrain;
         private Point charPos;
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            if (terrain == null)
-            {
-                LoadData();
-            }
-
-            zoomFactor = 1;
-            var renderer = new TerrainRenderer();
-            var images = new List<Bitmap>();
-            foreach (var chunk in terrain)
-            {
-                images.Add(renderer.Render(chunk));
-            }
-
-            var chunkSize = images[0].Width; //or height. They are square;
-            renderedImage = new Bitmap(chunkSize * 3, chunkSize * 3);
-            var graphics = Graphics.FromImage(renderedImage);
-            for (int x = 0; x < 3; x++)
-            {
-                for (int y = 0; y < 3; y++)
-                {
-                    graphics.DrawImage(images[y * 3 + x], new Point(x * chunkSize, (3 - y - 1) * chunkSize));
-                }
-            }
-
-            pictureBox1.Size = renderedImage.Size;
-            pictureBox1.Image = renderedImage;
-        }
-
         private void btnRender_Click(object sender, EventArgs e)
         {
             var watch = new Stopwatch();
@@ -340,8 +177,6 @@ namespace LiFMap
             pictureBox1.Size = renderedImage.Size;
             pictureBox1.Image = renderedImage;
             lbOutput.Items.Add($"Rendering terrrain = {watch.ElapsedMilliseconds}");
-
-            //label1.Text = $"Elevation: {int.Parse(textBox1.Text)}";
         }
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
@@ -356,7 +191,6 @@ namespace LiFMap
 
             var cellX = worldPos.X % 511;
             var cellY = 511 - (worldPos.Y % 511) - 1;
-            //var cellY = (worldPos.Y % 511);
 
             var chunk = terrain.Where(t => t.X == chunkX && t.Y == chunkY).First();
 
@@ -381,37 +215,31 @@ namespace LiFMap
                 timer = null;
                 (sender as Button).Text = "Start";
             }
-            //renderedImage.Save(@"render.png", ImageFormat.Png);
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
             GetData();
-            
+
             if (cbFollowPlayer.Checked)
             {
                 panel2.AutoScrollPosition = charPos;
-                //panel2.HorizontalScroll.Value = charPos.X;
-                //panel2.VerticalScroll.Value = charPos.Y;
             }
             pictureBox1.Refresh();
         }
 
-        //Point oldMousePos;
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
-            //var mousePos = PointToClient(Cursor.Position);
             label3.Text = $"MouseCoords: {e.X}x{e.Y}";
             var worldPos = MousePosToWorldCoords(e.Location);
             if (terrain == null)
-                return; 
+                return;
 
             var chunkX = worldPos.X / 511;
             var chunkY = worldPos.Y / 511;
 
             var cellX = worldPos.X % 511;
             var cellY = 511 - (worldPos.Y % 511) - 1;
-            //var cellY = (worldPos.Y % 511);
 
             var chunk = terrain.Where(t => t.X == chunkX && t.Y == chunkY).First();
 
@@ -434,16 +262,6 @@ namespace LiFMap
             }
         }
 
-        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
-        {
-
-        }
-
-        private void panel2_MouseMove(object sender, MouseEventArgs e)
-        {
-
-        }
-
         private void btnSearch_Click(object sender, EventArgs e)
         {
             var watch = new Stopwatch();
@@ -459,7 +277,7 @@ namespace LiFMap
             var images = new Dictionary<Tuple<int, int>, Bitmap>();
             var tasks = new List<Task>();
 
-            var materialId = ((KeyValuePair < int, string> )cbSubstances.SelectedItem).Key;
+            var materialId = ((KeyValuePair<int, string>)cbSubstances.SelectedItem).Key;
 
             var minQuality = 0;
             if (!int.TryParse(txtMinQuality.Text, out minQuality))

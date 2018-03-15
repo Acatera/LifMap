@@ -10,6 +10,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -38,10 +39,35 @@ namespace LiFMap
 
             panel2.MouseWheel += Panel2_MouseWheel;
             pictureBox1.MouseWheel += PictureBox1_MouseWheel;
-            renderedImage = new Bitmap(@"render.png");
+            //renderedImage = new Bitmap(@"render.png");
 
-            pictureBox1.Size = renderedImage.Size;
-            pictureBox1.Image = renderedImage;
+            //pictureBox1.Size = renderedImage.Size;
+            //pictureBox1.Image = renderedImage;
+            LoadSubstances();
+        }
+
+        private void LoadSubstances()
+        {
+            var substances = new Dictionary<int, string>();
+            var substancesFile = @"D:\Steam\steamapps\common\Life is Feudal Your Own\scripts\cm_substances.cs";
+            var regex = new Regex(@"ter2_id.+?([0-9]*?);.*?terrainMaterialName.*?\""([A-Za-z]*?)\"";", RegexOptions.Singleline);
+            var text = File.ReadAllText(substancesFile);
+            foreach (Match match in regex.Matches(text))
+            {
+                var substId = int.Parse(match.Groups[1].Value);
+                var substName = match.Groups[2].Value;
+                substances.Add(substId, substName);
+            }
+
+            cbSubstances.Items.Clear();
+            cbSubstances.DisplayMember = "Value";
+            cbSubstances.ValueMember = "Key";
+            foreach (var substance in substances)
+            {
+                cbSubstances.Items.Add(substance);
+                
+            }
+            cbSubstances.Sorted = true;
         }
 
         private void Panel2_MouseWheel(object sender, MouseEventArgs e)
@@ -279,10 +305,11 @@ namespace LiFMap
                 }
             }
 
+            pictureBox1.Size = renderedImage.Size;
             pictureBox1.Image = renderedImage;
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void btnRender_Click(object sender, EventArgs e)
         {
             var watch = new Stopwatch();
             watch.Start();
@@ -308,20 +335,9 @@ namespace LiFMap
             }
             Task.WaitAll(tasks.ToArray());
 
-            //var chunkSize = images.[0].Width; //or height. They are square;
-            var chunkSize = 511;//hardcoded for now;
-            renderedImage = new Bitmap(chunkSize * 3, chunkSize * 3);
-            var graphics = Graphics.FromImage(renderedImage);
-            for (int x = 0; x < 3; x++)
-            {
-                for (int y = 0; y < 3; y++)
-                {
-                    var tuple = new Tuple<int, int>(x, y);
-                    if (images.ContainsKey(tuple))
-                        graphics.DrawImage(images[tuple], new Point(x * chunkSize, y * chunkSize));
-                }
-            }
+            CombineRenderedChunks(images);
 
+            pictureBox1.Size = renderedImage.Size;
             pictureBox1.Image = renderedImage;
             lbOutput.Items.Add($"Rendering terrrain = {watch.ElapsedMilliseconds}");
 
@@ -344,7 +360,7 @@ namespace LiFMap
 
             var chunk = terrain.Where(t => t.X == chunkX && t.Y == chunkY).First();
 
-            var cell = chunk.GetMaterialAt(cellX, cellY, int.Parse(textBox1.Text), int.Parse(textBox2.Text));
+            var cell = chunk.GetCellAt(cellX, cellY, int.Parse(textBox1.Text), int.Parse(textBox2.Text));
             label5.Text = $"Cell at {worldPos.X}, {worldPos.Y}: elevation: {cell.Elevation - 5000}\nMaterial: {cell.MaterialId}\nQuality:{cell.Quality}";
             label2.Text = $"Cell at {worldPos.X}, {worldPos.Y}: elevation: {cell.Elevation}";
         }
@@ -399,7 +415,7 @@ namespace LiFMap
 
             var chunk = terrain.Where(t => t.X == chunkX && t.Y == chunkY).First();
 
-            var cell = chunk.GetMaterialAt(cellX, cellY, int.Parse(textBox1.Text), int.Parse(textBox2.Text));
+            var cell = chunk.GetCellAt(cellX, cellY, int.Parse(textBox1.Text), int.Parse(textBox2.Text));
             label5.Text = $"Cell at {worldPos.X}, {worldPos.Y}: elevation: {cell.Elevation - 5000}\nMaterial: {cell.MaterialId}\nQuality:{cell.Quality}";
             label2.Text = $"Cell at {worldPos.X}, {worldPos.Y}: elevation: {cell.Elevation}";
         }
@@ -426,6 +442,60 @@ namespace LiFMap
         private void panel2_MouseMove(object sender, MouseEventArgs e)
         {
 
+        }
+
+        private void btnSearch_Click(object sender, EventArgs e)
+        {
+            var watch = new Stopwatch();
+            watch.Start();
+            if (terrain == null)
+            {
+                LoadData();
+                lbOutput.Items.Add($"Loading terrrain = {watch.ElapsedMilliseconds}");
+            }
+
+            watch.Restart();
+            var renderer = new TerrainRenderer();
+            var images = new Dictionary<Tuple<int, int>, Bitmap>();
+            var tasks = new List<Task>();
+
+            var materialId = ((KeyValuePair < int, string> )cbSubstances.SelectedItem).Key;
+
+            var minQuality = 0;
+            if (!int.TryParse(txtMinQuality.Text, out minQuality))
+                return;
+
+            foreach (var chunk in terrain)
+            {
+                tasks.Add(Task.Factory.StartNew(() =>
+                {
+                    images.Add(new Tuple<int, int>(chunk.X, chunk.Y),
+                        renderer.RenderSearchResults(chunk, int.Parse(textBox1.Text), int.Parse(textBox2.Text), materialId, minQuality));
+                }));
+            }
+            Task.WaitAll(tasks.ToArray());
+
+            CombineRenderedChunks(images);
+
+            pictureBox1.Size = renderedImage.Size;
+            pictureBox1.Image = renderedImage;
+            lbOutput.Items.Add($"Rendering terrrain = {watch.ElapsedMilliseconds}");
+        }
+
+        private void CombineRenderedChunks(Dictionary<Tuple<int, int>, Bitmap> images)
+        {
+            var chunkSize = 511;//hardcoded for now;
+            renderedImage = new Bitmap(chunkSize * 3, chunkSize * 3);
+            var graphics = Graphics.FromImage(renderedImage);
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    var tuple = new Tuple<int, int>(x, y);
+                    if (images.ContainsKey(tuple))
+                        graphics.DrawImage(images[tuple], new Point(x * chunkSize, y * chunkSize));
+                }
+            }
         }
     }
 }

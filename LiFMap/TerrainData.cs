@@ -29,6 +29,14 @@ namespace LiFMap
             return validCells.DefaultIfEmpty(new TerrainCell { Elevation = elevation })
                 .FirstOrDefault();
         }
+
+        public TerrainCell GetCellAtElevationWithQuality(int elevation, int depth, int materialId, int minQuality)
+        {
+            var validCells = Cells.Where(c => c.Elevation <= elevation && c.Elevation > elevation - depth && c.Quality >= minQuality && c.MaterialId == materialId)
+                .OrderByDescending(c => c.Elevation);
+            return validCells.DefaultIfEmpty(new TerrainCell { Elevation = elevation })
+                .FirstOrDefault();
+        }
     }
 
     public struct TerrainCell
@@ -43,8 +51,11 @@ namespace LiFMap
     public class Terrain
     {
         public int Size { get; private set; }
-        public int X { get; set; }
-        public int Y { get; set; }
+        public int X { get; private set; }
+        public int Y { get; private set; }
+
+        private List<int[]> indexData;
+        private TerrainColumn[] data;
 
         public Terrain()
         {
@@ -56,10 +67,6 @@ namespace LiFMap
             X = x;
             Y = y;
         }
-
-        private List<int[]> indexData;
-        //private List<TerrainColumn> data;
-        private TerrainColumn[] data;
 
         public Terrain LoadData(string path)
         {
@@ -74,7 +81,6 @@ namespace LiFMap
 
         private void LoadTerrainData(string datPath)
         {
-            //data = new List<TerrainColumn>();
             data = new TerrainColumn[indexData.Count];
             using (var stream = new FileStream(datPath, FileMode.Open, FileAccess.Read))
             {
@@ -87,7 +93,6 @@ namespace LiFMap
                     {
                         var depth = indexData[i][1];
 
-                        //var buffer = new byte[depth * 8];
                         var column = new TerrainColumn(depth);
                         for (int d = 0; d < depth; d++)
                         {
@@ -100,28 +105,9 @@ namespace LiFMap
                                 IsTopMost = d == 0
                             };
                             offset += 8;
-                            //var cell = new TerrainCell
-                            //{
-                            //    Elevation = buffer[(d * 8) + 1] << 8 | buffer[(d * 8) + 0],
-                            //    MaterialId = buffer[(d * 8) + 3] << 8 | buffer[(d * 8) + 2],
-                            //    Flags = buffer[(d * 8) + 5] << 8 | buffer[(d * 8) + 4],
-                            //    Quality = buffer[(d * 8) + 7] << 8 | buffer[(d * 8) + 6],
-                            //    IsTopMost = d == 0
-                            //};
-                            //var cell = new TerrainCell
-                            //{
-                            //    Elevation = reader.ReadInt16(),
-                            //    MaterialId = reader.ReadInt16(),
-                            //    Flags = reader.ReadInt16(),
-                            //    Quality = reader.ReadInt16(),
-                            //    IsTopMost = d == 0
-                            //};
-                            //column.Cells.Add(cell);
                             column.Cells[d] = cell;
                         }
-                        //data.Add(column);
                         data[i] = column;
-                        //Data.Add(point);
                     }
                 }
             }
@@ -155,16 +141,19 @@ namespace LiFMap
             }
         }
 
-        public TerrainCell GetTopElevation(int x, int y)
+        public TerrainCell GetTopCellAt(int x, int y)
         {
             return data[y * Size + x].GetTopCell();
         }
 
-        public TerrainCell GetMaterialAt(int x, int y, int elevation, int depth)
+        public TerrainCell GetCellAt(int x, int y, int elevation, int depth)
         {
             return data[y * Size + x].GetCellAtElevation(elevation, depth);
+        }
 
-            //return Data[y * Size + x][0][1];
+        public TerrainCell GetCellAtWithQuality(int x, int y, int elevation, int depth, int materialId, int minQuality)
+        {
+            return data[y * Size + x].GetCellAtElevationWithQuality(elevation, depth, materialId, minQuality);
         }
     }
 }

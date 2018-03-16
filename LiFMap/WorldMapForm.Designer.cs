@@ -39,8 +39,6 @@
             this.cbFollowPlayer = new System.Windows.Forms.CheckBox();
             this.btnCenterPlayer = new System.Windows.Forms.Button();
             this.lbOutput = new System.Windows.Forms.ListBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -49,10 +47,14 @@
             this.label1 = new System.Windows.Forms.Label();
             this.btnRenderWorld = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.numElevation = new System.Windows.Forms.NumericUpDown();
+            this.numDepth = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             this.gbSearch.SuspendLayout();
             this.panel2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numElevation)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numDepth)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox1
@@ -73,8 +75,8 @@
             this.panel1.Controls.Add(this.cbFollowPlayer);
             this.panel1.Controls.Add(this.btnCenterPlayer);
             this.panel1.Controls.Add(this.lbOutput);
-            this.panel1.Controls.Add(this.textBox2);
-            this.panel1.Controls.Add(this.textBox1);
+            this.panel1.Controls.Add(this.numDepth);
+            this.panel1.Controls.Add(this.numElevation);
             this.panel1.Controls.Add(this.label5);
             this.panel1.Controls.Add(this.label4);
             this.panel1.Controls.Add(this.label3);
@@ -183,24 +185,6 @@
             this.lbOutput.Size = new System.Drawing.Size(199, 186);
             this.lbOutput.TabIndex = 13;
             // 
-            // textBox2
-            // 
-            this.textBox2.Dock = System.Windows.Forms.DockStyle.Top;
-            this.textBox2.Location = new System.Drawing.Point(4, 83);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(199, 20);
-            this.textBox2.TabIndex = 12;
-            this.textBox2.Text = "10";
-            // 
-            // textBox1
-            // 
-            this.textBox1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.textBox1.Location = new System.Drawing.Point(4, 63);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(199, 20);
-            this.textBox1.TabIndex = 11;
-            this.textBox1.Text = "5100";
-            // 
             // label5
             // 
             this.label5.AutoSize = true;
@@ -283,6 +267,42 @@
             this.panel2.Size = new System.Drawing.Size(562, 526);
             this.panel2.TabIndex = 3;
             // 
+            // numElevation
+            // 
+            this.numElevation.Dock = System.Windows.Forms.DockStyle.Top;
+            this.numElevation.Location = new System.Drawing.Point(4, 63);
+            this.numElevation.Maximum = new decimal(new int[] {
+            7000,
+            0,
+            0,
+            0});
+            this.numElevation.Name = "numElevation";
+            this.numElevation.Size = new System.Drawing.Size(199, 20);
+            this.numElevation.TabIndex = 18;
+            this.numElevation.Value = new decimal(new int[] {
+            5100,
+            0,
+            0,
+            0});
+            // 
+            // numDepth
+            // 
+            this.numDepth.Dock = System.Windows.Forms.DockStyle.Top;
+            this.numDepth.Location = new System.Drawing.Point(4, 83);
+            this.numDepth.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.numDepth.Name = "numDepth";
+            this.numDepth.Size = new System.Drawing.Size(199, 20);
+            this.numDepth.TabIndex = 19;
+            this.numDepth.Value = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            // 
             // WorldMapForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -292,12 +312,15 @@
             this.Controls.Add(this.panel1);
             this.Name = "WorldMapForm";
             this.Text = "Form1";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.WorldMapForm_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.gbSearch.ResumeLayout(false);
             this.gbSearch.PerformLayout();
             this.panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.numElevation)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numDepth)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -313,8 +336,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.ListBox lbOutput;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Button btnCenterPlayer;
@@ -325,6 +346,8 @@
         private System.Windows.Forms.TextBox txtMinQuality;
         private System.Windows.Forms.Label lblMinQuality;
         private System.Windows.Forms.ComboBox cbSubstances;
+        private System.Windows.Forms.NumericUpDown numDepth;
+        private System.Windows.Forms.NumericUpDown numElevation;
     }
 }
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
@@ -37,6 +38,9 @@ namespace LiFMap
         public WorldMapForm()
         {
             InitializeComponent();
+
+            numElevation.Value = Properties.Settings.Default.Elevation;
+            numDepth.Value = Properties.Settings.Default.Depth;
 
             panel2.MouseWheel += Panel2_MouseWheel;
             pictureBox1.MouseWheel += PictureBox1_MouseWheel;
@@ -203,7 +207,7 @@ namespace LiFMap
                 tasks.Add(Task.Factory.StartNew(() =>
                 {
                     images.Add(new Tuple<int, int>(chunk.X, chunk.Y),
-                        renderer.RenderLayer(chunk, int.Parse(textBox1.Text), int.Parse(textBox2.Text)));
+                        renderer.RenderLayer(chunk, (int)numElevation.Value, (int)numDepth.Value));
                 }));
             }
             Task.WaitAll(tasks.ToArray());
@@ -230,7 +234,7 @@ namespace LiFMap
 
             var chunk = terrain.Where(t => t.X == chunkX && t.Y == chunkY).First();
 
-            var cell = chunk.GetCellAt(cellX, cellY, int.Parse(textBox1.Text), int.Parse(textBox2.Text));
+            var cell = chunk.GetCellAt(cellX, cellY, (int)numElevation.Value, (int)numDepth.Value);
             label5.Text = $"Cell at {worldPos.X}, {worldPos.Y}: elevation: {cell.Elevation - 5000}\nMaterial: {cell.MaterialId}\nQuality:{cell.Quality}";
             label2.Text = $"Cell at {worldPos.X}, {worldPos.Y}: elevation: {cell.Elevation}";
         }
@@ -279,7 +283,7 @@ namespace LiFMap
 
             var chunk = terrain.Where(t => t.X == chunkX && t.Y == chunkY).First();
 
-            var cell = chunk.GetCellAt(cellX, cellY, int.Parse(textBox1.Text), int.Parse(textBox2.Text));
+            var cell = chunk.GetCellAt(cellX, cellY, (int)numElevation.Value, (int)numDepth.Value);
             label5.Text = $"Cell at {worldPos.X}, {worldPos.Y}: elevation: {cell.Elevation - 5000}\nMaterial: {cell.MaterialId}\nQuality:{cell.Quality}";
             label2.Text = $"Cell at {worldPos.X}, {worldPos.Y}: elevation: {cell.Elevation}";
         }
@@ -324,7 +328,7 @@ namespace LiFMap
                 tasks.Add(Task.Factory.StartNew(() =>
                 {
                     images.Add(new Tuple<int, int>(chunk.X, chunk.Y),
-                        renderer.RenderSearchResults(chunk, int.Parse(textBox1.Text), int.Parse(textBox2.Text), materialId, minQuality));
+                        renderer.RenderSearchResults(chunk, (int)numElevation.Value, (int)numDepth.Value, materialId, minQuality));
                 }));
             }
             Task.WaitAll(tasks.ToArray());
@@ -350,6 +354,13 @@ namespace LiFMap
                         graphics.DrawImage(images[tuple], new Point(x * chunkSize, y * chunkSize));
                 }
             }
+        }
+
+        private void WorldMapForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Properties.Settings.Default.Elevation = (int)numElevation.Value;
+            Properties.Settings.Default.Depth = (int)numDepth.Value;
+            Properties.Settings.Default.Save();
         }
     }
 }
